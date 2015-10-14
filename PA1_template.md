@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 Author: Steelcastle  
 Date: October 14, 2015
 
@@ -14,7 +9,8 @@ This file constitutes the required submission in response to [Peer Assessment 1]
 ## Loading and preprocessing the data
 
 Begin by checking if required data file is present - if not, download zipped file and then unzip into current directory. Since this work is being performed in a Windows environment, the default download method is used. (Mac users will have to adjust their method accordingly)
-```{r}
+
+```r
 if(!file.exists("activity.csv")){
         url<-"https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
         download.file(url,destfile='activity.zip',mode="wb")
