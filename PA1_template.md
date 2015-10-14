@@ -19,20 +19,31 @@ if(!file.exists("activity.csv")){
 ```
 The data file is in comma separated value format and is relatively small in size. Therefore the `read.csv` command will serve us adequately. Appropriate class values are assigned to each column.
 
-`activitySet <- read.csv("activity.csv",colClasses="numeric","Date","numeric")`
+
+```r
+activitySet <- read.csv("activity.csv",colClasses=c("numeric","Date","numeric"))
+```
 
 
 ## What is mean total number of steps taken per day?
 
 Calculate the total # of steps for each day in the observation
-data set. The `aggreagte` function ignores `NA` values by default.
+data set. The `aggregate` function ignores `NA` values by default.
 
-`dailyTotSteps <- aggregate(steps ~ date,FUN=sum,data=activitySet)` 
+
+```r
+dailyTotSteps <- aggregate(steps ~ date,FUN=sum,data=activitySet)
+```
 
 A simple histogram provides a relatively complete view of the distribution of daily steps contained in the observation data.
 The number of breaks was set to 16 by running a number of iterations to produce a view with bins of width equal to 1000 steps.
 
-`hist(dailyTotSteps$steps,breaks=16,main="Distribution of Observed Daily Steps",xlab="Total # of daily steps")`
+
+```r
+hist(dailyTotSteps$steps,breaks=16,main="Distribution of Observed Daily Steps",xlab="Total # of daily steps")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
 
 ## What is the average daily activity pattern?
 
