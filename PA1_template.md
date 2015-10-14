@@ -1,4 +1,9 @@
-# Reproducible Research: Peer Assessment 1
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+    keep_md: true
+---
 Author: Steelcastle  
 Date: October 14, 2015
 
@@ -43,7 +48,7 @@ The number of breaks was set to 16 by running a number of iterations to produce 
 hist(dailyTotSteps$steps,breaks=16,main="Distribution of Observed Daily Steps",xlab="Total # of daily steps")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-4-1.png) 
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
 
 ## What is the average daily activity pattern?
 
