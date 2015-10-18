@@ -34,7 +34,7 @@ Calculate the total # of steps for each day in the observation
 data set. The `aggregate` function ignores `NA` values by default.
 
 ```{r}
-dailyTotSteps <- aggregate(steps ~ date,FUN=sum,data=activitySet)
+dailyTotSteps <- aggregate(steps ~ date,data=activitySet,FUN=sum)
 ```
 
 A simple histogram provides a relatively complete view of the distribution of daily steps contained in the observation data.
@@ -43,13 +43,120 @@ The number of breaks was set to 16 by running a number of iterations to produce 
 ```{r}
 hist(dailyTotSteps$steps,breaks=16,main="Distribution of Observed Daily Steps",xlab="Total # of daily steps")
 ```
+The mean and median values for the daily total # of steps is calculated here while ignoring the missing values in the original observation dataset.
+
+The mean value is: 
+```{r}
+mean(dailyTotSteps$steps)
+```
+while the median is: 
+```{r}
+median(dailyTotSteps$steps)
+```
+In a later analysis step, these same values will be calculated using imputed values for those observation periods which have missing values for the # of steps. These two scenarios will be compared to determine any differences.
 
 ## What is the average daily activity pattern?
 
+For each corresponding 5 minute interval in a day, the mean # of steps is calculated across all days in the observation period (ignoring those intervals where there is missing data for the # of steps).
+```{r}
+dailyIntervalMeans <- aggregate(steps ~ interval,data=activitySet,FUN=mean)
+```
 
+These values are now plotted in a time-series against each of the 5 minute intervals.
+```{r}
+plot(dailyIntervalMeans$interval,dailyIntervalMeans$steps,type="l",main="Mean # of Steps per 5 Minute Interval",xlab="Daily Interval (5 minutes) from 00:00 to 23:55",ylab="# of Steps (mean)")
+```
+
+The interval which has the highest value for the mean # of steps is:
+```{r}
+dailyIntervalMeans[which.max(dailyIntervalMeans$steps),"interval"]
+```
+This represents the 5 minute period beginning at 08:35 AM.
+
+The corresponding mean # of steps for this interval is:
+```{r}
+dailyIntervalMeans[which.max(dailyIntervalMeans$steps),"steps"]
+```
 
 ## Imputing missing values
 
+To get a sense of how many values are missing from the original observation data set, the number of rows with `NA` values can be counted:
+
+```{r}
+sum(is.na(activitySet$steps))
+```
+
+In order to deal with those observations that are missing values for the # of steps, we can take a number of approaches. We could impute the daily mean value or the individual interval mean or possibly the median values. Using the argument of habitual daily activity for humans, it seems that using the individual interval means would be most appropriate - one's activity level should be fairly similar from day to day when comparing most intervals. It is acknowledged that weekend activity may prove to be somewhat different but should not have a large variance from weekdays in terms of average activity. Therefore the individual interval means will be assigned to those missing interval values. We have conveniently calculated these means in our previous step.
+
+We begin by merging the original observations dataframe with the daily interval means dataframe and then assigning the mean values to those rows with NAs:
+
+```{r}
+mergedIntervals<-merge(activitySet,dailyIntervalMeans,by="interval")
+mergedIntervals$NAs<-is.na(mergedIntervals$steps.x)
+mergedIntervals$steps.x[mergedIntervals$NAs]<-mergedIntervals$steps.y[mergedIntervals$NAs]
+```
+
+Now, the data is re-aggregated to calculate daily total steps and again the distribution is shown in a histogram. 
+```{r}
+imputed_dailyTotSteps<-aggregate(steps.x~date,data=mergedIntervals,FUN=sum)
+
+hist(imputed_dailyTotSteps$steps.x,breaks=16,main="Distribution of Observed Daily Steps (including imputed values)",xlab="Total # of daily steps")
+```
+
+The mean value for the new dataset is: 
+```{r}
+mean(imputed_dailyTotSteps$steps)
+```
+while the median is: 
+```{r}
+median(imputed_dailyTotSteps$steps)
+```
+We can observe that the mean has not changed which should be expected since we imputed missing values with means of the original data. However the median has now moved to the mean value showing an increase of 1.19.
+
+We can also visually compare the distribution of values between the original data set and the imputed data set as shown by the following:
+
+```{r}
+hist(dailyTotSteps$steps,xlim=c(0,22000),ylim=c(0,20),breaks=16,col=rgb(1,1,0,0.7),main="Comparison of Observed Daily Steps",xlab="Total # of daily steps")
+
+par(new=TRUE)
+
+hist(imputed_dailyTotSteps$steps.x,xlim=c(0,22000),ylim=c(0,20),breaks=16,col=rgb(0,1,1,0.4),main="",xlab="",ylab="")
+
+legend("topright",c("Original data","Imputed data"),col=c("seagreen1","cyan"),lwd=5)
+```
+
+We can see that the two distributions overlap one another (the underlying color of the imputed data is masked by the original data bars) except for one difference. That being the middle of the distribution whose frequency has increased by 8, which happens to be the # of days added which had imputed values.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+To answer this, the data must be groomed to translate the `date` column to an actual day of the week and then to identify this as either a weekday or a weekend.
+
+```{r}
+mergedIntervals$day<-weekdays(as.Date(mergedIntervals$date))
+mergedIntervals$daystatus<-ifelse(mergedIntervals$day %in% c("Saturday","Sunday"),"weekend","weekday")
+```
+This new `daystatus` column is then used to aggregate the mean # of steps for each interval on a weekday versus a weekend.
+
+```{r}
+activityPattern<-aggregate(steps.x~interval + daystatus,data=mergedIntervals,FUN=mean)
+```
+
+The package `lattice` is loaded in order to use the `xyplot` function.
+```{r}
+library(lattice)
+```
+We now plot lines representing the activity patterns for both weekdays and weekends.
+
+```{r}
+xyplot(steps.x~interval | daystatus, activityPattern, main="Mean # of Steps per 5 Minute Interval", xlab="Daily Interval (5 minutes) from 00:00 to 23:55", ylab="# of Steps (mean)", type="l", lty=1, layout=c(1,2), par.settings=list(strip.background=list(col="mediumspringgreen")))
+```
+
+
+We can now see that the mean daily activity during weekend days is higher than that of the weekdays.
+
+
+
+End of analysis.
+==========================================================================
+
